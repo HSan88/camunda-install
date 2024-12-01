@@ -58,37 +58,53 @@ curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ```
 
-# Install Camunda
-Note: During the Camunda installation, there are commands that require you to wait after executing them until the necessary tasks are completed or, if they require downloading, the download is complete. To prevent this from happening again (waiting), we mark the commands that require waiting with a ⏳ sign. Usually these commands create pods that need to be in READY state to continue.
+# Camunda Installation
+Note: During the Camunda installation, there are commands that you should wait after executing them until the necessary tasks are completed, these commands are marked  with ⏳ sign. Usually they create pods that need to be in READY state to continue Camunda installation.
 
 Clone this repository with `git clone git@github.com:HSan88/camunda-install.git` command or you can download it.
 
-Run each of the following commands one by one
-Creating a cluster for Camunda
-1. ⏳
+Run each of the following commands one by one in the root directory of cloned repository
+
+## ⏳ Creating a cluster for Camunda
 ```
 sudo kind create cluster -n camunda --image='kindest/node:v1.30.0' --config kind.config.yaml
+```
+## Checking camunda cluster is ready to use
+run the following commands:
+```
 sudo kubectl get pods -A
 ```
-After run `sudo kubectl get pods -A` you see 1/1 in the READY column for all pods, it means that the pods are fully running and ready to use, you can now continue with the installation.
+After run `sudo kubectl get pods -A` you see some pods and serveices that there is 0/1 or 1/1 in their READY column, you should wait until all of them turns to 1/1
 
-2. ⏳ After running each commands (one-by-one), you need wait and check pods state with `sudo kubectl get pods -A` command until the READY state of pods get 1/1.
+## ⏳ Installing ingress-nginx requirements
 ```
 sudo kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-sudo kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
-sudo kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
 ```
-3. You don't have to wait after running following commands.
+
+## ⏳ Installing local-path-provisioner
+```
+sudo kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+```
+after all the pods got started, run following command:
 ```
 sudo kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+## ⏳ Installing calico 
+```
+sudo kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+```
+
+## Add and update Camunda helm repository
+```
 helm repo add camunda https://helm.camunda.io
 helm repo update
 ```
 
-4. At this stage, you need to change the values ​​in the secret.yaml file because the access keys to Camunda services are stored in this file. One thing you need to pay attention to is that the values ​​are stored in base64, which means that first you need to convert your desired keys to base64 and then replace the default value in this file.
-If you do not do this, the key to use Camunda services will be the same as the default value.
-Default key: default-api-key
-After changing this file, run the following command
+4. At this stage, you need to change the values ​​in the secret.yaml file because the access keys to Camunda services are stored in this file. Note that values ​​are stored in base64 format.
+
+Default key for all services is: `default-api-key`
+
+After change this file, run the following command
 ```
 kubectl apply -f secret.yaml
 ```
@@ -134,9 +150,15 @@ sudo echo "fs.inotify.max_user_watches = 2097152" >> /etc/sysctl.conf
 sudo echo "fs.inotify.max_user_instances = 2048" >> /etc/sysctl.conf
 ```
 
-Because the camunda.local and zeebe.camunda.local domains are not valid domains on your local network, you will not be able to access them unless you either have an internal CA or by editing the hosts file.
+Because the `camunda.local` and `zeebe.camunda.local` domains are not valid domains on your local network, you will not be able to access them unless you either have an internal CA or by editing the hosts file.
 
 add following lines to the hosts file in the machine you want connect to Cammunda, **change *CAMUNDA_IP* to your camunda machine IP**
+
+in linux, the hosts file is located in this path
+```
+/etc/hosts
+```
+
 ```
 CAMUNDA_IP camunda.local
 CAMUNDA_IP zeebe.camunda.local
@@ -149,7 +171,7 @@ https://camunda.local/identity
 https://camunda.local/tasklist
 https://camunda.local/operate
 ```
-At this point, Cammunda is fully installed and available, but to use the various Cammunda services, the necessary permissions must be assigned to each service by the Identity service. For this purpose, open the following URL in your browser:
+At this point, Cammunda is fully installed and available, but to use the various Cammunda services, the necessary permissions must be assigned to each service by the Identity service. For this purpose, open the following URL in firefox on **Camunda server machine**
 ```
 https://camunda.local/identity
 ```
