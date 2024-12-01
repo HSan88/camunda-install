@@ -134,10 +134,37 @@ sudo echo "fs.inotify.max_user_watches = 2097152" >> /etc/sysctl.conf
 sudo echo "fs.inotify.max_user_instances = 2048" >> /etc/sysctl.conf
 ```
 
-Done, you can access cammunda services with following addresses:
+Because the camunda.local and zeebe.camunda.local domains are not valid domains on your local network, you will not be able to access them unless you either have an internal CA or by editing the hosts file.
+
+add following lines to the hosts file in the machine you want connect to Cammunda, **change *CAMUNDA_IP* to your camunda machine IP**
+```
+CAMUNDA_IP camunda.local
+CAMUNDA_IP zeebe.camunda.local
+```
+Now you can access Cammunda services with following addresses:
+
+```
 zeebe.camunda.local
 https://camunda.local/identity
 https://camunda.local/tasklist
 https://camunda.local/operate
+```
+At this point, Cammunda is fully installed and available, but to use the various Cammunda services, the necessary permissions must be assigned to each service by the Identity service. For this purpose, open the following URL in your browser:
+```
+https://camunda.local/identity
+```
+**If you have not changed the first user section in file `values-8.6.2.yaml`, the default username and password are as follows:**
 
+        username:  camunda
+        password:  camundasecret123!@#
 
+After logging in, in the Applications section, you need to assign access rights to each service. To do this, follow these steps:
+Click on each application
+In the Access to APIs section, select Assign Permissions
+In the window that opens, select the corresponding Api for each application from the Select Api section (for example, for the Operate application, you must select Operate Api) and select all the access rights displayed, and finally select the Add option.
+
+Swagger URLs:
+```
+https://camunda.fakoor.local/tasklist/swagger-ui/index.html
+https://camunda.fakoor.local/operate/swagger-ui/index.html
+```
