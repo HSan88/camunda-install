@@ -36,7 +36,7 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-build-plugin docker-compose-plugin
 ```
 
-# install helm:
+# Install helm:
 source: https://helm.sh/docs/intro/install/#from-script
 ```
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -44,7 +44,7 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 ```
 
-# install kind:
+# Install kind:
 source: https://kind.sigs.k8s.io/docs/user/quick-start#installing-from-release-binaries
 ```
 [ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64
@@ -59,11 +59,10 @@ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ```
 
 # Install Camunda
-Note: During the Camunda installation, there are commands that require you to wait after executing them until the necessary tasks are completed or, if they require downloading, the download is complete. To prevent this from happening again (waiting), we mark the commands that require waiting with a ⏳ sign. Usually these commands create pods that need to be in READY state to continue. To check that the pods are running and ready to use, run the its next following command.
+Note: During the Camunda installation, there are commands that require you to wait after executing them until the necessary tasks are completed or, if they require downloading, the download is complete. To prevent this from happening again (waiting), we mark the commands that require waiting with a ⏳ sign. Usually these commands create pods that need to be in READY state to continue.
 
-```
-sudo kubectl get pods -A
-```
+Clone this repository with `git clone git@github.com:HSan88/camunda-install.git` command or you can download it.
+
 Run each of the following commands one by one
 Creating a cluster for Camunda
 1. ⏳
@@ -107,11 +106,14 @@ openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 \
 -addext "subjectAltName=DNS:camunda.local"
 
 kubectl create secret tls tls-secret --cert=camunda.crt --key=camunda.key
-
 kubectl create secret tls tls-secret-zeebe --cert=zeebe.crt --key=zeebe.key
 ```
 
 This is the main installation step, and depending on your internet speed it will take a while. Be sure to run the `sudo kubectl get pods` command to see if the work is complete and all Camunda pods should be in READEY. Note that if your VPN is not working properly, you may have trouble downloading the images.
+
+
+**In `values-8.6.2.yaml` file you have to change `identity.firstUser` settings**
+
 
 ```
 helm install camunda camunda/camunda-platform -f values-8.6.2.yaml
@@ -131,3 +133,11 @@ sudo sysctl fs.inotify.max_user_instances=2048
 sudo echo "fs.inotify.max_user_watches = 2097152" >> /etc/sysctl.conf
 sudo echo "fs.inotify.max_user_instances = 2048" >> /etc/sysctl.conf
 ```
+
+Done, you can access cammunda services with following addresses:
+zeebe.camunda.local
+https://camunda.local/identity
+https://camunda.local/tasklist
+https://camunda.local/operate
+
+
