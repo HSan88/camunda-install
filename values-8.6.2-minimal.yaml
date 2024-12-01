@@ -1,0 +1,200 @@
+# Chart values for the Camunda Platform 8 Helm chart in combined Ingress setup.
+
+# This file deliberately contains only the values that differ from the defaults.
+# For changes and documentation, use your favorite diff tool to compare it with:
+# https://github.com/camunda/camunda-platform-helm/blob/main/charts/camunda-platform
+
+# IMPORTANT: Make sure to change "camunda.example.com" to your domain.
+
+global:
+    image:
+        tag:
+    ingress:
+        enabled:   true
+        className: nginx
+        host:      "camunda.local"
+        tls:
+            # Ingress.tls.enabled if true, then tls is configured on the ingress resource. If enabled the Ingress.host need to be defined.
+            enabled:    true
+            # Ingress.tls.secretName defines the secret name which contains the TLS private key and certificate
+            secretName: "tls-secret"
+    identity:
+        auth:
+            publicIssuerUrl: "https://camunda.local/auth/realms/camunda-platform"
+            operate:
+                existingSecret:
+                    name: identity-secret-for-components
+                redirectUrl: "https://camunda.local/operate"
+            tasklist:
+                existingSecret:
+                    name: identity-secret-for-components
+                redirectUrl: "https://camunda.local/tasklist"
+            optimize:
+                existingSecret:
+                    name: identity-secret-for-components
+                redirectUrl: "https://camunda.local/optimize"
+            webModeler:
+                existingSecret:
+                    name: identity-secret-for-components
+                redirectUrl: "https://camunda.local/modeler"
+            connectors:
+                existingSecret:
+                    name: identity-secret-for-components
+                redirectUrl: "https://camunda.local/connector"
+            zeebe:
+                existingSecret:
+                    name: identity-secret-for-components
+connectors:
+    enabled:     true
+    contextPath: "/connectors"
+    image:
+        repository: camunda/connectors-bundle
+        tag:        8.6.2
+    resources:
+        limits:
+            cpu:    1
+            memory: 512Mi
+        requests:
+            cpu:    500m
+            memory: 512Mi
+
+identity:
+    contextPath: "/identity"
+    fullURL:     "https://camunda.local/identity"
+    enabled:     true
+    resources:
+        limits:
+            cpu:    2
+            memory: 2048Mi
+        requests:
+            cpu:    1
+            memory: 1024Mi
+    image:
+        repository: camunda/identity
+        tag:        8.6.1
+        
+        identityKeycloak: # see: http://github.com/bitnami/charts/tree/master/bitnami/keycloak#parameters
+    #        ingress: # see: http://www.keycloak.org/server/reverseproxy
+    #            enabled:          true
+    #            ingressClassName: nginx
+    #            hostname:         "camunda.local"
+            extraEnvVars: # see: http://github.com/bitnami/bitnami-docker-keycloak#configuration
+            -   name:  KEYCLOAK_ENABLE_HTTPS
+                value: "true"
+            -   name:  KEYCLOAK_PRODUCTION
+                value: "true"
+#            -   name:  KEYCLOAK_EXTRA_ARGS
+#                value: "-Dkeycloak.frontendUrl=https://camunda.local/auth"
+    firstUser:
+        enabled:   true
+        username:  fakoor
+        password:  fakoor123!@#
+        email:     fakoor@hami-co.ir
+        firstName: Hami
+        lastName:  Co
+
+identityKeycloak:
+    resources:
+        limits:
+            cpu:    1
+            memory: 1024Mi
+        requests:
+            cpu:    500m
+            memory: 512Mi
+    image:
+        repository: camunda/keycloak
+        tag:        25.0.6
+    auth:
+        existingSecret: identity-secret-for-components
+    postgresql:
+        image:
+            repository: bitnami/postgresql
+            tag:        15.8.0
+        auth:
+            existingSecret: identity-secret-for-components
+operate:
+    image:
+        tag: 8.6.2
+    contextPath: "/operate"
+    resources:
+        limits:
+            cpu:    500m
+            memory: 512Mi
+        requests:
+            cpu:    500m
+            memory: 512Mi
+
+optimize:
+    enabled:     false
+    contextPath: "/optimize"
+    image:
+        repository: camunda/optimize
+        tag:        8.6.1
+
+tasklist:
+    contextPath: "/tasklist"
+    image:
+        repository: camunda/tasklist
+        tag:        8.6.2
+
+
+zeebe:
+    clusterSize:       1
+    partitionCount:    1
+    replicationFactor: 1
+    pvcSize:           10Gi
+    resources: {}
+    initResources: {}
+    image:
+        repository: camunda/zeebe
+        tag:        8.6.2
+
+zeebe-gateway:
+    image:
+        repository: camunda/zeebe
+        tag:        8.6.2
+    replicas: 1
+    ingress:
+        enabled: true
+        grpc:
+            className: nginx
+            host:      "zeebe.camunda.local"
+            tls:
+                enabled:    true
+                secretName: "tls-secret-zeebe"
+
+elasticsearch:
+    image:
+        repository: bitnami/elasticsearch
+        tag:        8.15.2
+    master:
+        nodeGroup:    "master"
+        replicaCount: 1
+        heapSize:     "512m"
+    data:
+        nodeGroup:    "date"
+        replicaCount: 0
+        heapSize:     "512m"
+    persistence:
+        enabled: true
+    resources:
+        limits:
+            cpu:    1
+            memory: 1Gi
+        requests:
+            cpu:    1
+            memory: 1Gi
+    initResources: {}
+    minimumMasterNodes:       1
+    # Allow no backup for single node setups
+    clusterHealthCheckParams: "wait_for_status=yellow&timeout=1s"
+    # Request smaller persistent volumes.
+    volumeClaimTemplate:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: "local-path"
+        resources:
+            limits:
+                storage: 10Gi
+            requests:
+                storage: 10Gi
+                
