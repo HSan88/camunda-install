@@ -87,8 +87,8 @@ identity:
 #                value: "-Dkeycloak.frontendUrl=https://camunda.local/auth"
     firstUser:
         enabled:   true
-        username:  fakoor
-        password:  fakoor123!@#
+        username:  camunda
+        password:  camundasecret123!@#
         email:     fakoor@hami-co.ir
         firstName: Hami
         lastName:  Co
